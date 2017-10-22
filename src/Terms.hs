@@ -37,20 +37,10 @@ subst :: Symbol -> Term -> Term -> Term
 
 subst x s (Var x') =  if x' == x then s else Var x'
 
--- subst x s (Abstraction y t1) = if  y /= x && (y `notElem` freeVars s)
---                                   then Abstraction y $ subst x s t1
---                                   else subst x s $ Abstraction (y ++ "\'") (subst y (Var y) t1)  -- "rewriting on the fly"  
-
-subst x s (Abstraction y t1) = if y == x
-                               then Abstraction y t1
-                               else if y `notElem` freeVars s
-                                    then Abstraction y $ subst x s t1
-                                    else subst x s $ Abstraction (y ++ "\'") (subst y (Var y) t1)  -- "rewriting on the fly"
+subst x s (Abstraction y t1)
+    | y /= x && y `notElem` freeVars s = Abstraction y $ subst x s t1       
+    | otherwise = subst x s $ Abstraction (y ++ "'") (subst y (Var $ y ++ "'") t1)
                                    
-                                  
-                                  
-
-
 subst x s (Application t1 t2) = Application (recur t1) (recur t2)
   where recur = subst x s
 
@@ -58,7 +48,7 @@ subst x s (Application t1 t2) = Application (recur t1) (recur t2)
 
 prettyPrintSubTest :: Symbol -> Term -> Term -> IO ()
 prettyPrintSubTest s t1 t2 = do
-    putStrLn $ "["++s++"->"++(show t1)++"]"++(show t2)++" => "++(show $ subst "x" t1 t2)    
+    putStrLn $ "["++s++"->"++(show t1)++"]"++(show t2)++" => "++(show $ subst s t1 t2)    
 
 
 
@@ -84,6 +74,7 @@ mainz = do
   prettyPrintSubTest "x" (Var "z") (Abstraction "z" (Var "x"))
   
   prettyPrintSubTest "y" (Var "x") (Application (Var "y") (Var "z"))
+  prettyPrintSubTest "y" (Var "x") (Var "y") 
 
 
   prettyPrintSubTest "y" (Var "z") (Abstraction "x" (Application (Var "x") (Var "y")))
@@ -91,8 +82,14 @@ mainz = do
   -- let tb = Abstraction "y" (Application (Var "x") (Var "y"))
   -- putStrLn $ show $ subst "x" ta tb
 
-
-
-
-
   
+  let t1 = (Application (Var "f") (Var "y"))
+  let t2 = (Abstraction "y"
+            (Application
+             (Abstraction "f" (Application (Var "f") (Var "x")))
+             (Var "y")
+            ))
+           
+  putStrLn $ show t1
+  putStrLn $ show t2
+  prettyPrintSubTest "x" t1 t2
