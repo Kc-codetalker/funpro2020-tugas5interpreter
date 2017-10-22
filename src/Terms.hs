@@ -1,7 +1,6 @@
 module Terms
   ( Term (..)
-  , testTerm0
-  , testTerm1
+  , subst
   ) where
 
 import Data.List (nub, (\\))
@@ -10,7 +9,7 @@ import Data.List (nub, (\\))
 
 type Symbol = String
 data Term = Var Symbol
-          | Abstraction { input :: Symbol , body  :: Term }
+          | Abstraction { letS :: Symbol , body  :: Term }
           | Application Term Term
           deriving(Eq)
 
@@ -18,7 +17,7 @@ data Term = Var Symbol
 
 instance Show Term where
   show (Var s) = s
-  show (Abstraction ins body) = "(λ" ++ ins ++ "." ++ show body ++ ")"
+  show (Abstraction ins body) = "(λ" ++ ins ++ ". " ++ show body ++ ")"
   show (Application t1 t2) = show t1 ++ " " ++ show t2
 
 
@@ -33,36 +32,67 @@ isVal :: Term -> Bool
 isVal (Abstraction _ _) = True
 isVal _  = False
 
--- WIP
+
 subst :: Symbol -> Term -> Term -> Term
-subst x (Var s1) (Var s2) = if s2 == x
-                            then Var s1
-                            else Var s2                                 
-subst x t1 (Abstraction i b) = Abstraction i (subst x t1 b)
-subst x t1 (Application at1 at2) = Application (recur at1) (recur at2) 
-  where recur  = subst x t1
+
+subst x s (Var x') =  if x' == x then s else Var x'
+
+-- subst x s (Abstraction y t1) = if  y /= x && (y `notElem` freeVars s)
+--                                   then Abstraction y $ subst x s t1
+--                                   else subst x s $ Abstraction (y ++ "\'") (subst y (Var y) t1)  -- "rewriting on the fly"  
+
+subst x s (Abstraction y t1) = if y == x
+                               then Abstraction y t1
+                               else if y `notElem` freeVars s
+                                    then Abstraction y $ subst x s t1
+                                    else subst x s $ Abstraction (y ++ "\'") (subst y (Var y) t1)  -- "rewriting on the fly"
+                                   
+                                  
+                                  
 
 
--- eval t = if isVal t
---             then t
---             else reduce t
-
--- reduce :: Term -> Term
--- reduce t@(Var _) = t
--- reduce (Abstraction x t) = undefined
--- reduce (Application (Abstraction x t) t2) = subst x t2 t
--- reduce t@(Application (Var x) _) = t
--- reduce (Application t1 t2) = undefined
-
-
-
+subst x s (Application t1 t2) = Application (recur t1) (recur t2)
+  where recur = subst x s
 
 
 
-----
-testTerm0 = Application
-             (Abstraction {input = "x", body = Application (Var "x") (Var "x")})
-             (Abstraction {input = "y", body = Var "y"})
+prettyPrintSubTest :: Symbol -> Term -> Term -> IO ()
+prettyPrintSubTest s t1 t2 = do
+    putStrLn $ "["++s++"->"++(show t1)++"]"++(show t2)++" => "++(show $ subst "x" t1 t2)    
 
 
-testTerm1 = Abstraction "x" (Application (Var "x") (Var "y"))
+
+mainz :: IO ()
+mainz = do
+
+  putStrLn "(pg 70)"
+  let t1 = (Abstraction "z" (Application (Var "z") (Var "w")))
+  let t2 = (Abstraction "y" (Var "x"))
+  prettyPrintSubTest "x" t1 t2
+
+  putStrLn("\n(pg 70)")
+  prettyPrintSubTest "x" (Var "y") (Abstraction "x" (Var "x"))  
+  
+  
+
+  
+  let t1 = (Abstraction "z" (Application (Var "z") (Var "w")))
+  let t2 = (Abstraction "y" (Var "x"))
+
+  prettyPrintSubTest "x" t1 t2
+    
+  prettyPrintSubTest "x" (Var "z") (Abstraction "z" (Var "x"))
+  
+  prettyPrintSubTest "y" (Var "x") (Application (Var "y") (Var "z"))
+
+
+  prettyPrintSubTest "y" (Var "z") (Abstraction "x" (Application (Var "x") (Var "y")))
+  -- let ta = (Application (Var "y") (Var "z"))
+  -- let tb = Abstraction "y" (Application (Var "x") (Var "y"))
+  -- putStrLn $ show $ subst "x" ta tb
+
+
+
+
+
+  
