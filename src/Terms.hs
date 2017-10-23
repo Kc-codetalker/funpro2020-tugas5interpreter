@@ -1,6 +1,7 @@
 module Terms
   ( Term (..)
   , subst
+  , eval
   ) where
 
 import Data.List (nub, (\\))
@@ -38,7 +39,8 @@ subst :: Symbol -> Term -> Term -> Term
 subst x s (Var x') =  if x' == x then s else Var x'
 subst x s (Abstraction y t1)
     | y /= x && y `notElem` freeVars s = Abstraction y $ subst x s t1       
-    | otherwise = subst x s $ Abstraction (y ++ "'") (subst y (Var $ y ++ "'") t1)
+    | otherwise = subst x s $ Abstraction y' (subst y (Var y') t1)
+    where y' = y ++ "'"
 subst x s (Application t1 t2) = Application (recur t1) (recur t2)
   where recur = subst x s
 
@@ -48,7 +50,8 @@ eval1 (Var _) = Nothing
 eval1 (Abstraction s b) = Nothing
 eval1 (Application t1 t2) = case (t1,t2) of
           (Abstraction x b, t) -> pure $ subst x t b 
-          _ -> (Application <$> eval1 t1 <*> pure t2) <|>  (Application <$> pure t1 <*> eval1 t2) -- E-App1, E-App2
+          _ -> (Application <$> eval1 t1 <*> pure t2)   -- E-App1, 
+            <|>  (Application <$> pure t1 <*> eval1 t2) -- E-App2,
 
 
 
@@ -68,10 +71,10 @@ eval = evaluator eval1
 
 ----- testing
 
-t1 = (Application (Abstraction "x" (Application (Var "x") (Var "x"))) (Abstraction "y" (Var "y")))
-x = Var "x"
-y = Var "y"
-z = Var "z"
+--t1 = (Application (Abstraction "x" (Application (Var "x") (Var "x"))) (Abstraction "y" (Var "y")))
+-- x = Var "x"
+-- y = Var "y"
+-- z = Var "z"
 
   
 c_0 = (Abstraction "s" (Abstraction "z" (Var "z")))
