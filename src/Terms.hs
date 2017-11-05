@@ -48,30 +48,57 @@ isVal _  = False
 
 
 
-
+-- D. Implementation of single step reduction for call by value
 eval1 :: Term -> Maybe Term
-eval1 (Var _)             = Nothing 
-eval1 (Abstraction _ _)   = Nothing
-eval1 (Application t1 t2) = case (t1,t2) of
+eval1 (Var _)              = Nothing 
+eval1 (Abstraction s b)    = Abstraction s <$> eval1 b                 -- change to = nothing to implement call by name.
+eval1 (Application t1 t2)  = case (t1,t2) of
       (Abstraction x b, t) -> pure $ subst x t b 
       _                    -> Application <$> eval1 t1 <*> pure t2    -- E-App1,  if the first term is a redux.
                           <|> Application <$> pure t1  <*> eval1 t2   -- E-App2,  if the second term is a redux.
 
 
+whileJust :: (a -> Maybe a) -> a -> a
+
+whileJust f a = case f a of
+                  Just a' -> whileJust f a'
+                  Nothing -> a
+
+-- E. Eval, reduces terms to normal form.
 eval :: Term -> Term
-eval t = case eval1 t of
-           Just t' -> eval t'
-           Nothing -> t
+eval = whileJust eval1
+
+
+
+evalPrinter :: Term -> IO ()
+evalPrinter t = do
+  print t
+  case eval1 t of
+    Just t' -> evalPrinter t'
+    Nothing -> putStrLn "done"
+  
+  
+
+
+
+  
+              
 
 -- Some common  terms
 pattern X = Var "x"
 pattern Y = Var "y"
+pattern Z = Var "z"
+
+t1 = Abstraction "x" (Application X X)
+t2 = Abstraction "y" Y
+demoTerm = Application t1 t2
 
 testing :: IO ()
 testing = do
-  let t1 = Abstraction "x" (Application X X)
-  let t2 = Abstraction "y" Y
-  let term = Application t1 t2
-  putStrLn $ show term ++ " ->* " ++ show (eval term)
+  
+  putStrLn $ show demoTerm ++ " ->* " ++ show (eval demoTerm)
+
+  let t3 = (Application (Abstraction "x" (Application (Abstraction "y" Y) Z)) Y)
+  putStrLn $ show t3 ++ " ->* " ++ show (eval t3)
 
   
