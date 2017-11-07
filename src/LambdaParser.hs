@@ -1,7 +1,7 @@
 {-
 Code adapted from  David Ringo : https://github.com/dmringo 
 -}
-module LambdaParser where
+module LambdaParser (parseLambda) where 
 
 import Text.ParserCombinators.ReadP
 import Data.Char (isAlpha, isPunctuation)
@@ -9,10 +9,15 @@ import Control.Arrow ((>>>))
 import Terms
 
 
+parseLambda :: String -> Maybe Term
+parseLambda = runparse term
+
+
 runparse :: ReadP a -> String -> Maybe a
 runparse p s = case readP_to_S (p <* skipSpaces <* eof) s of
   [(v,"")] -> Just v
   _        -> Nothing
+
 
 stripWS :: ReadP a -> ReadP a
 stripWS = (skipSpaces *>)
