@@ -1,51 +1,45 @@
 module LambdaParser where
 
-
-import Text.ParserCombinators.Parsec
+import Text.ParserCombinators.ReadP
+import Data.Char (isAlpha, isAlphaNum, isAscii, isPunctuation)
+import Data.Foldable
+import Control.Arrow ((>>>))
+import Control.Monad
 import Terms
 
+test :: ReadP a -> String -> [(a, String)]
+test p s = readP_to_S p s
 
-stripWs :: Parser a -> Parser a
-stripWs p = spaces *> p
+runparse :: ReadP a -> String -> Maybe a
+runparse p s = case readP_to_S (p <* skipSpaces <* eof) s of
+  [(v,"")] -> Just v
+  _        -> Nothing
 
-
-parseLambdaSymbol :: Parser String
-parseLambdaSymbol = string "\\"
-
-varParser :: Parser Term
-varParser = Var <$> many1 letter
-
-token' :: String -> Parser String
-token' sym = stripWs $  string sym
-
-parenthesised :: Parser a -> Parser a
-parenthesised p = token' "(" *> p <* token' ")"
+stripWS :: ReadP a -> ReadP a
+stripWS = (skipSpaces *>)
 
 
-absParser :: Parser Term
-absParser = Abstraction <$> binding <*> expParser
-  where inputP = many1 letter
-        dot = char '.'
-        binding = parseLambdaSymbol *> inputP <* dot
-
-appParser :: Parser Term
-appParser = do
-  t1 <- nonAppParser <|> expParser
-  spaces
-  t2 <- nonAppParser <|> expParser
-  return $ Application t1 t2
-
-nonAppParser :: Parser Term
-nonAppParser = (varParser <|> absParser)
+token :: String -> ReadP String
+token = stripWS . string 
 
 
-expParser :: Parser Term
-expParser = (try (nonAppParser <* spaces <* eof)) <|> appParser
-          
-  
+lambda, dot, varname :: ReadP String
+lambda = token "\\"
+dot = token "."
+varname = (:) <$> stripWS (satisfy isAlpha) <*> munch ((&&) <$> isAlpha <*> (not . isPunctuation))
 
 
 
+parens :: ReadP a -> ReadP a
+parens =  (token "(" *>) >>> (<* token ")")
+
+
+varP, absP, appP, term :: ReadP Term
+term = absP <++ appP <++ varP <++ parens term
+varP = Var <$> varname
+absP = Abstraction <$> (lambda *> varname <* dot) <*> term
+appP = chainl1 nonApp (skipSpaces *> pure Application)
+  where nonApp = absP +++ varP +++ parens term
 
 
 
