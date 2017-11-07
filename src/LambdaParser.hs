@@ -1,14 +1,13 @@
+{-
+Code adapted from  David Ringo : https://github.com/dmringo 
+-}
 module LambdaParser where
 
 import Text.ParserCombinators.ReadP
-import Data.Char (isAlpha, isAlphaNum, isAscii, isPunctuation)
-import Data.Foldable
+import Data.Char (isAlpha, isPunctuation)
 import Control.Arrow ((>>>))
-import Control.Monad
 import Terms
 
-test :: ReadP a -> String -> [(a, String)]
-test p s = readP_to_S p s
 
 runparse :: ReadP a -> String -> Maybe a
 runparse p s = case readP_to_S (p <* skipSpaces <* eof) s of
@@ -27,7 +26,6 @@ lambda, dot, varname :: ReadP String
 lambda = token "\\"
 dot = token "."
 varname = (:) <$> stripWS (satisfy isAlpha) <*> munch ((&&) <$> isAlpha <*> (not . isPunctuation))
-
 
 
 parens :: ReadP a -> ReadP a
