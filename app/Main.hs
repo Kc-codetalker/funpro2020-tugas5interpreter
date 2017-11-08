@@ -18,7 +18,7 @@ runLoop :: IO ()
 runLoop  = do
   s <- getLine
   printParser s
-  main
+  runLoop
   
 main :: IO ()
 main = do

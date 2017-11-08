@@ -37,6 +37,7 @@ parens :: ReadP a -> ReadP a
 parens =  (token "(" *>) >>> (<* token ")")
 
 
+
 varP, absP, appP, term :: ReadP Term
 term = absP <++ appP <++ varP <++ parens term
 varP = Var <$> varname
