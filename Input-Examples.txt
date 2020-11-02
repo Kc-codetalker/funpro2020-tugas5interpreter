@@ -1,0 +1,117 @@
+SINTAKSIS
+Backslash '\' adalah pengganti tanda lambda.
+Dot '.' digunakan untuk memisahkan simbol lambda yang bersarang.
+Alphabet dianggap sebagai variabel.
+Angka dan operator '+' dan '*' akan diubah menjadi bentuk church numeral.
+Tanda kurung "()" sebaiknya selalu digunakan untuk membatasi scope suatu bagian atau ekspresi.
+Selalu gunakan tanda kurung untuk membungkus suatu ekspresi lambda yang akan diaplikasikan dengan ekspresi di sebelah kanannya.
+Aplikasi variabel dengan ekspresi tidak selalu perlu tanda kurung untuk ekspresi yang sebelah kiri.
+
+** Setiap pasang baris ekspresi lambda di bawah adalah input dan outputnya untuk interpreter ini.
+
+
+ABSTRACTION
+\x.x
+(λx. x)
+
+\x.x y
+(λx. (x y))
+
+Pemberian tanda kurung untuk scoping tentunya akan lebih aman
+\x.(x y)
+(λx. (x y))
+
+\x.x y z
+(λx. ((x y) z))
+
+\x.(x y z)
+(λx. ((x y) z))
+
+\x.(x (y z))
+(λx. (x (y z)))
+
+
+APPLICATION
+Yang salah:
+\x.(x y z) a
+(λx. (((x y) z) a))
+
+Yang benar harus ada tanda kurung (dan jadi tidak perlu spasi):
+(\x.(x y z))a
+((a y) z)
+
+(\x.\y.(x y z))(\w.\v.v w)
+(λy. (z y))
+
+(\x.\y.(x y z)) (\w.\v.v w)(\t.t)
+(z (λt. t))
+
+Aplikasi variabel tanpa tanda kurung harus diberi spasi, jika tidak maka variabel-variabel yang menempel (seperti xy di bawah ini) akan dianggap 1 variabel
+\x.xy
+(λx. xy)
+
+(\x.xy)a
+xy
+
+Yang kita inginkan:
+\x.x y
+(λx. (x y))
+
+(\x.x y)a
+(a y)
+
+
+CHURCH NUMERAL
+0
+0
+
+1
+1
+
+2
+2
+
+Jika angka ditempel sesuatu akan dianggap aplikasi fungsi:
+2a
+(λx. (a (a x)))
+
+Maka saat ini belum support menerima input bilangan lebih dari 1 digit,
+namun dapat menghasilkan output bilangan lebih dari 1 digit:
+27
+49
+
+Efek menarik di sini adalah jika bilangan pertama diaplikasikan dengan bilangan kedua,
+maka terjadi efek bilangan kedua dipangkat bilangan pertama.
+Misal ingin 8 dipangkat 3 menghasilkan 512 maka:
+38
+512
+
+
+OPERASI ARITMETIKA PENJUMLAHAN DAN PERKALIAN
++
+(λw. (λy. (λx. (y ((w y) x)))))
+
+*
+(λw. (λy. (λx. (w (y x)))))
+
++0
+1
+
++1
+2
+
+Meskipun input tidak bisa lebih dari 1 digit, output bisa lebih dari 1 digit:
+2 + 9
+11
+
+Saat ini operator perkalian baru dapat digunakan sebagai operator prefix:
+* 3 4
+12
+
+Belum ada presedensi perkalian sehingga semua asosiatif ke kiri dan hasilnya bisa tidak masuk akal:
+1 + * 2 2
+16
+
+Sebaiknya tetap gunakan kurung untuk menunjukkan presedensi:
+1 + (* 2 2)
+5
