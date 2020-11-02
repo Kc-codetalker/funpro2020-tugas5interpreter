@@ -20,7 +20,7 @@ Pada __LambdaParser.hs__, saya tambahkan dahulu fungsi __numberToChurch__ dan __
 
 #### Modifikasi Output
 
-Untuk menampilkan kembali digit pada output, saya modifikasi [src/Terms.hs](./src/Terms.hs). Pertama saya tambahkan ___constructor___ baru pada tipe data Term, yaitu ```Digit Int```. Saya juga tambahkan Digit ke implementasi __Show__-nya. Kemudian saya tambahkan 1 layer setelah __eval__, yaitu untuk mengecek apakah _term_ output berupa Church's Numeral dan konversikan ke digit jika iya. Saya bagi jadi 3 _level_, yaitu __firstLvl..__, __sndLvl..__, dan __bodyLvl..__ karena bentuk ekspresi Church's Numeral adalah ```λfirstVar.λsndVar.body```. Pada _level_ pertama, jika berupa abstraksi maka lanjut cek _level_ kedua. Pada _level_ kedua, jika berupa abstraksi lagi maka lanjut cek _level_ ketiga (_body_). Pada level ini, rekursi terus apakah memenuhi bentuk _body_ Church's Numeral dan jumlahkan jumlah variabel ```firstVar``` yang berurutan. Hasil penjumlahan adalah bilangan digitnya. Jika ada pengecekan gagal selama rekursi maka langsung kembalikan _term_ awal (berarti bukan Church's Numeral).
+Untuk menampilkan kembali digit pada output, saya modifikasi [__src/Terms.hs__](./src/Terms.hs). Pertama saya tambahkan ___constructor___ baru pada tipe data Term, yaitu ```Digit Int```. Saya juga tambahkan Digit ke implementasi __Show__-nya. Kemudian saya tambahkan 1 layer setelah __eval__, yaitu untuk mengecek apakah _term_ output berupa Church's Numeral dan konversikan ke digit jika iya. Saya bagi jadi 3 _level_, yaitu __firstLvl..__, __sndLvl..__, dan __bodyLvl..__ karena bentuk ekspresi Church's Numeral adalah ```λfirstVar.λsndVar.body```. Pada _level_ pertama, jika berupa abstraksi maka lanjut cek _level_ kedua. Pada _level_ kedua, jika berupa abstraksi lagi maka lanjut cek _level_ ketiga (_body_). Pada level ini, rekursi terus apakah memenuhi bentuk _body_ Church's Numeral dan jumlahkan jumlah variabel ```firstVar``` yang berurutan. Hasil penjumlahan adalah bilangan digitnya. Jika ada pengecekan gagal selama rekursi maka langsung kembalikan _term_ awal (berarti bukan Church's Numeral).
 
 Output akan menampilkan bilangan digit jika seluruh ekspresinya adalah Church's Numeral. Jika hanya substring atau subterm dari ekspresi yang merupakan Church's Numeral, akan tetap ditampilkan sebagai ekspresi lambda. Hal ini mengingat saya memperbolehkan input berupa aplikasi campuran antara Church's Numeral dengan ekspresi lambda biasa sehingga hasil akhir dapat berupa ekspresi lambda apapun.
 ```
@@ -37,7 +37,7 @@ bukan bilangan, akan menghasilkan: (λx. (λy. (x (λt. t))))
 
 ### Cara Menggunakan
 
-Cara menjalankan interpreter ini dapat dilihat di bawah ini atau pada README original di bagian bawah (namun _clone_ repositori yang ini).
+Cara menjalankan interpreter ini dapat dilihat di bawah ini atau pada README original di bagian bawah (namun _clone_ repositori yang ini). Butuh ```stack``` dan ```make``` terinstall.
 ``` shell
 > git clone https://gitlab.cs.ui.ac.id/kevin.christian71/funpro2020-tugas5interpreter.git
 > cd funpro2020-tugas5interpreter
@@ -61,7 +61,7 @@ keduanya menghasilkan: (λx. (x y))
 ```
 
 
-Namun jika ekspresi sebelah kiri (ekspresi yang diberi aplikasi) bukan variabel sederhanya, selalu harus diberi tanda kurung (dan tidak perlu spasi pemisah):
+Namun jika ekspresi sebelah kiri (ekspresi yang diberi aplikasi) bukan variabel sederhana, selalu harus diberi tanda kurung (dan tidak perlu spasi pemisah):
 ```
 (\x.y x)(\t.t)
 menghasilkan: (y (λt. t))
